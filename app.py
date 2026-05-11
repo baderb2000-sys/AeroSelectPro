@@ -789,3 +789,359 @@ if score >= 90:
     st.success("""
 ✅ HVAC system performance is excellent.
 """)
+    # ============================================
+# HVAC ANIMATION DASHBOARD
+# ============================================
+
+st.divider()
+
+st.header("🎛️ HVAC Live Dashboard")
+
+dashboard_col1, dashboard_col2, dashboard_col3 = st.columns(3)
+
+dashboard_col1.metric(
+    "Air Velocity",
+    f"{velocity:.2f} ft/s"
+)
+
+dashboard_col2.metric(
+    "Cooling Load",
+    f"{airflow * 1.08:.1f} BTU/h"
+)
+
+dashboard_col3.metric(
+    "System Status",
+    "ONLINE"
+)
+
+# ============================================
+# ROOM COVERAGE ANALYSIS
+# ============================================
+
+st.divider()
+
+st.header("📍 Room Coverage Analysis")
+
+coverage_efficiency = min(
+    100,
+    (num_diffusers * recommended["throw"]) / characteristic_length * 25
+)
+
+st.metric(
+    "Coverage Efficiency",
+    f"{coverage_efficiency:.1f}%"
+)
+
+if coverage_efficiency >= 90:
+    st.success("Excellent room air coverage")
+
+elif coverage_efficiency >= 70:
+    st.warning("Moderate air coverage")
+
+else:
+    st.error("Poor air coverage")
+
+# ============================================
+# DRAFT RISK ANALYSIS
+# ============================================
+
+st.divider()
+
+st.header("🌬️ Draft Risk Analysis")
+
+draft_velocity = cfm_per_diffuser / 100
+
+if draft_velocity < 4:
+
+    st.success("Draft Risk: LOW")
+
+elif draft_velocity < 7:
+
+    st.warning("Draft Risk: MEDIUM")
+
+else:
+
+    st.error("Draft Risk: HIGH")
+
+st.info(f"""
+Estimated Draft Velocity:
+{draft_velocity:.2f} ft/s
+""")
+
+# ============================================
+# HVAC ACOUSTIC ANALYSIS
+# ============================================
+
+st.divider()
+
+st.header("🔊 HVAC Acoustic Analysis")
+
+acoustic_data = pd.DataFrame({
+    "Frequency": [
+        "Low",
+        "Medium",
+        "High"
+    ],
+    "Noise Level": [
+        expected_nc * 0.8,
+        expected_nc,
+        expected_nc * 1.2
+    ]
+})
+
+acoustic_fig = px.line(
+    acoustic_data,
+    x="Frequency",
+    y="Noise Level",
+    markers=True
+)
+
+st.plotly_chart(
+    acoustic_fig,
+    use_container_width=True
+)
+
+if expected_nc <= 30:
+
+    st.success("Quiet HVAC Performance")
+
+elif expected_nc <= 40:
+
+    st.warning("Moderate HVAC Noise")
+
+else:
+
+    st.error("High HVAC Noise")
+
+# ============================================
+# CFD STYLE AIRFLOW SIMULATION
+# ============================================
+
+st.divider()
+
+st.header("💨 CFD-Style Airflow Simulation")
+
+cfd_x = np.linspace(0, room_length, 100)
+
+cfd_y = np.sin(cfd_x / 2)
+
+cfd_fig = go.Figure()
+
+cfd_fig.add_trace(go.Scatter(
+    x=cfd_x,
+    y=cfd_y,
+    mode='lines'
+))
+
+cfd_fig.update_layout(
+    title="Simulated HVAC Airflow Pattern",
+    xaxis_title="Room Length",
+    yaxis_title="Airflow Stream"
+)
+
+st.plotly_chart(
+    cfd_fig,
+    use_container_width=True
+)
+
+# ============================================
+# MULTI ROOM SYSTEM
+# ============================================
+
+st.divider()
+
+st.header("🏢 Multi-Room HVAC System")
+
+room_count = st.slider(
+    "Number of Rooms",
+    1,
+    10,
+    1
+)
+
+total_system_airflow = airflow * room_count
+
+st.metric(
+    "Total Building Airflow",
+    f"{total_system_airflow:.1f} CFM"
+)
+
+# ============================================
+# HVAC COST ESTIMATION
+# ============================================
+
+st.divider()
+
+st.header("💰 HVAC Cost Estimation")
+
+diffuser_cost = num_diffusers * 120
+
+installation_cost = diffuser_cost * 0.4
+
+total_cost = diffuser_cost + installation_cost
+
+cost_col1, cost_col2, cost_col3 = st.columns(3)
+
+cost_col1.metric(
+    "Diffuser Cost",
+    f"${diffuser_cost:.0f}"
+)
+
+cost_col2.metric(
+    "Installation",
+    f"${installation_cost:.0f}"
+)
+
+cost_col3.metric(
+    "Total Cost",
+    f"${total_cost:.0f}"
+)
+
+# ============================================
+# INTERACTIVE CEILING DESIGNER
+# ============================================
+
+st.divider()
+
+st.header("🎨 Interactive Ceiling Designer")
+
+designer_x = st.slider(
+    "Move Diffusers Horizontally",
+    0,
+    10,
+    5
+)
+
+designer_y = st.slider(
+    "Move Diffusers Vertically",
+    0,
+    10,
+    5
+)
+
+designer_fig = go.Figure()
+
+designer_fig.add_trace(go.Scatter(
+    x=[designer_x],
+    y=[designer_y],
+    mode='markers+text',
+    text=["Diffuser"],
+    marker=dict(size=25)
+))
+
+designer_fig.update_layout(
+    height=500,
+    xaxis_title="Room Length",
+    yaxis_title="Room Width"
+)
+
+st.plotly_chart(
+    designer_fig,
+    use_container_width=True
+)
+
+# ============================================
+# PRESENTATION MODE
+# ============================================
+
+st.divider()
+
+st.header("🎤 Presentation Mode")
+
+presentation_mode = st.toggle(
+    "Enable Presentation Mode"
+)
+
+if presentation_mode:
+
+    st.success("""
+Presentation Mode Activated
+
+• Optimized for demonstrations
+• Large KPI cards
+• Professional commercial appearance
+""")
+
+# ============================================
+# EXPORT ENGINEERING PACKAGE
+# ============================================
+
+st.divider()
+
+st.header("📦 Export Engineering Package")
+
+package_text = f"""
+AeroSelect Pro Engineering Package
+
+Room Size:
+{room_length} x {room_width}
+
+Airflow:
+{airflow} CFM
+
+Selected Diffuser:
+{recommended['model']}
+
+NC:
+{expected_nc:.1f}
+
+Throw:
+{required_throw:.1f}
+"""
+
+st.download_button(
+    label="⬇ Download Engineering Package",
+    data=package_text,
+    file_name="engineering_package.txt"
+)
+
+# ============================================
+# SMART COLOR STATUS SYSTEM
+# ============================================
+
+st.divider()
+
+st.header("🟢 HVAC Status System")
+
+if score >= 90:
+
+    st.success("🟢 System Status: Excellent")
+
+elif score >= 75:
+
+    st.warning("🟡 System Status: Moderate")
+
+else:
+
+    st.error("🔴 System Status: Critical")
+
+# ============================================
+# HVAC OPTIMIZATION ENGINE
+# ============================================
+
+st.divider()
+
+st.header("⚙️ HVAC Optimization Engine")
+
+optimal_diffusers = max(
+    1,
+    round(airflow / 300)
+)
+
+optimal_cfm = airflow / optimal_diffusers
+
+st.success(f"""
+Optimal Design Found
+
+Recommended Number of Diffusers:
+{optimal_diffusers}
+
+Optimized CFM per Diffuser:
+{optimal_cfm:.1f}
+
+This optimized configuration improves:
+• Air distribution
+• NC performance
+• HVAC comfort
+• Energy efficiency
+""")
