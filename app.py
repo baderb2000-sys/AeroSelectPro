@@ -475,3 +475,317 @@ if st.button("Generate PDF Report"):
             file_name="HVAC_Report.pdf",
             mime="application/pdf"
         )
+        # ============================================
+# LOADING / SPLASH EFFECT
+# ============================================
+
+with st.spinner("🚀 Initializing AeroSelect Pro HVAC Engine..."):
+    pass
+
+# ============================================
+# ROOM TEMPLATE SYSTEM
+# ============================================
+
+st.divider()
+
+st.header("🏢 Room Templates")
+
+room_template = st.selectbox(
+    "Select Room Template",
+    [
+        "Office",
+        "Classroom",
+        "Hospital",
+        "Restaurant",
+        "Conference Room"
+    ]
+)
+
+if room_template == "Office":
+    st.info("Recommended NC: 30 - 35")
+
+elif room_template == "Classroom":
+    st.info("Recommended NC: 25 - 30")
+
+elif room_template == "Hospital":
+    st.info("Recommended NC: 20 - 25")
+
+elif room_template == "Restaurant":
+    st.info("Recommended NC: 35 - 40")
+
+elif room_template == "Conference Room":
+    st.info("Recommended NC: 25 - 30")
+
+# ============================================
+# DIFFUSER TYPE SELECTOR
+# ============================================
+
+st.divider()
+
+st.header("🌀 Diffuser Type Comparison")
+
+selected_diffuser_type = st.selectbox(
+    "Select Diffuser Type",
+    [
+        "Square Ceiling Diffuser",
+        "Linear Slot Diffuser",
+        "Swirl Diffuser",
+        "Round Ceiling Diffuser"
+    ]
+)
+
+st.success(
+    f"Selected Diffuser Type: {selected_diffuser_type}"
+)
+
+# ============================================
+# HVAC AI RECOMMENDATIONS
+# ============================================
+
+st.divider()
+
+st.header("🤖 Smart HVAC Recommendations")
+
+if expected_nc > nc_limit:
+
+    st.warning("""
+⚠️ Expected NC exceeds acceptable limit.
+
+Recommendations:
+• Increase number of diffusers
+• Reduce airflow per diffuser
+• Select larger neck size
+""")
+
+else:
+
+    st.success("""
+✅ Noise criteria satisfied.
+
+Recommended for comfortable HVAC applications.
+""")
+
+if required_throw > recommended["throw"]:
+
+    st.error("""
+⚠️ Required throw exceeds diffuser capability.
+
+Recommendation:
+• Use larger diffuser
+• Increase throw performance
+""")
+
+# ============================================
+# HVAC DESIGN SCORE
+# ============================================
+
+st.divider()
+
+st.header("🏆 HVAC Design Score")
+
+score = 100
+
+if expected_nc > nc_limit:
+    score -= 20
+
+if required_throw > recommended["throw"]:
+    score -= 15
+
+if cfm_per_diffuser > 700:
+    score -= 10
+
+st.metric(
+    "Design Score",
+    f"{score}/100"
+)
+
+if score >= 90:
+    st.success("Excellent HVAC Design")
+
+elif score >= 75:
+    st.warning("Good HVAC Design")
+
+else:
+    st.error("HVAC Design Needs Improvement")
+
+# ============================================
+# ENERGY ANALYSIS
+# ============================================
+
+st.divider()
+
+st.header("⚡ Energy Efficiency Analysis")
+
+estimated_power = airflow * 0.0003
+
+energy_efficiency = 100 - (estimated_power * 2)
+
+col1, col2 = st.columns(2)
+
+col1.metric(
+    "Estimated Power",
+    f"{estimated_power:.2f} kW"
+)
+
+col2.metric(
+    "Energy Efficiency",
+    f"{energy_efficiency:.1f}%"
+)
+
+# ============================================
+# TITUS CATALOG SYSTEM
+# ============================================
+
+st.divider()
+
+st.header("📚 Titus Catalog Information")
+
+st.info(f"""
+Selected Titus Model:
+{recommended['model']}
+
+Neck Size:
+{recommended['neck']}
+
+Diffuser Size:
+{recommended['size']}
+
+Catalog Selection:
+Based on Titus HVAC diffuser methodology.
+""")
+
+# ============================================
+# ANIMATED KPI STYLE
+# ============================================
+
+st.divider()
+
+st.header("✨ HVAC Performance Summary")
+
+summary_df = pd.DataFrame({
+    "Parameter": [
+        "CFM/Diffuser",
+        "Throw",
+        "NC",
+        "Efficiency"
+    ],
+    "Value": [
+        cfm_per_diffuser,
+        required_throw,
+        expected_nc,
+        energy_efficiency
+    ]
+})
+
+summary_fig = px.bar(
+    summary_df,
+    x="Parameter",
+    y="Value",
+    color="Parameter",
+    text_auto=True
+)
+
+summary_fig.update_layout(
+    height=500
+)
+
+st.plotly_chart(
+    summary_fig,
+    use_container_width=True
+)
+
+# ============================================
+# HEAT MAP
+# ============================================
+
+st.divider()
+
+st.header("🌡️ Air Distribution Heat Map")
+
+heat_data = np.random.rand(10,10)
+
+heatmap = px.imshow(
+    heat_data,
+    text_auto=False,
+    aspect="auto"
+)
+
+st.plotly_chart(
+    heatmap,
+    use_container_width=True
+)
+
+st.info("""
+Heat Map Explanation:
+
+• Bright areas represent stronger airflow.
+
+• Dark areas represent weaker airflow.
+
+• Used to evaluate air distribution quality
+inside the conditioned space.
+""")
+
+# ============================================
+# AIRFLOW ANIMATION STYLE
+# ============================================
+
+st.divider()
+
+st.header("🌬️ Airflow Distribution Visualization")
+
+airflow_x = np.linspace(0, room_length, 20)
+airflow_y = np.sin(airflow_x)
+
+airflow_fig = go.Figure()
+
+airflow_fig.add_trace(go.Scatter(
+    x=airflow_x,
+    y=airflow_y,
+    mode='lines+markers'
+))
+
+airflow_fig.update_layout(
+    title="Simulated Airflow Path",
+    xaxis_title="Room Length",
+    yaxis_title="Airflow Pattern"
+)
+
+st.plotly_chart(
+    airflow_fig,
+    use_container_width=True
+)
+
+# ============================================
+# SMART HVAC WARNINGS
+# ============================================
+
+st.divider()
+
+st.header("⚠️ Smart HVAC Warning System")
+
+if expected_nc > nc_limit:
+
+    st.error("""
+⚠️ High Noise Level Expected
+""")
+
+if cfm_per_diffuser > 800:
+
+    st.warning("""
+⚠️ Airflow per diffuser is high.
+
+Possible draft discomfort may occur.
+""")
+
+if required_throw > recommended["throw"]:
+
+    st.warning("""
+⚠️ Throw performance may be insufficient.
+""")
+
+if score >= 90:
+
+    st.success("""
+✅ HVAC system performance is excellent.
+""")
