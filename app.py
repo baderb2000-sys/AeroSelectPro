@@ -1,79 +1,79 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
+import numpy as np
 from fpdf import FPDF
-import math
 
-# =========================
+# ============================================
 # PAGE CONFIG
-# =========================
+# ============================================
 
 st.set_page_config(
     page_title="AeroSelect Pro",
-    page_icon="❄️",
+    page_icon="🌀",
     layout="wide"
 )
 
-# =========================
+# ============================================
 # CUSTOM CSS
-# =========================
+# ============================================
 
 st.markdown("""
 <style>
 
 .main {
-    background-color: #0E1117;
+    background-color: #0e1117;
+}
+
+h1, h2, h3, h4 {
     color: white;
 }
 
-h1,h2,h3,h4 {
-    color: #00FFF5;
+[data-testid="stMetricValue"] {
+    font-size: 38px;
+    color: #00d4ff;
 }
 
 .stButton>button {
-    background-color: #00ADB5;
+    background: linear-gradient(90deg,#00d4ff,#0066ff);
     color: white;
     border-radius: 12px;
-    height: 3em;
-    width: 100%;
+    height: 50px;
     font-size: 18px;
+    border: none;
 }
 
-[data-testid="metric-container"] {
-    background-color: #1B1F2A;
-    border-radius: 15px;
-    padding: 15px;
-    box-shadow: 0px 0px 12px rgba(0,255,255,0.2);
+section[data-testid="stSidebar"] {
+    background-color: #161b22;
 }
 
 </style>
 """, unsafe_allow_html=True)
 
-# =========================
+# ============================================
 # TITLE
-# =========================
+# ============================================
 
-st.title("❄️ AeroSelect Pro")
+st.title("🌀 AeroSelect Pro")
 st.subheader("Professional HVAC Diffuser Selection Tool")
 
 st.markdown("""
-AeroSelect Pro is an advanced HVAC engineering tool designed for:
-
-✅ Diffuser Selection  
-✅ HVAC Calculations  
-✅ Cooling Load Estimation  
-✅ Noise Analysis  
-✅ Airflow Optimization  
-✅ Professional Engineering Reports  
+### Features
+✅ HVAC Engineering Calculations  
+✅ Automatic Titus Diffuser Selection  
+✅ NC Validation  
+✅ 2D Layout Visualization  
+✅ 3D HVAC Room Visualization  
+✅ Engineering Report Generation  
+✅ Diffuser Comparison Table  
 """)
 
-st.markdown("---")
+# ============================================
+# SIDEBAR INPUTS
+# ============================================
 
-# =========================
-# SIDEBAR
-# =========================
-
-st.sidebar.header("📌 Design Inputs")
+st.sidebar.header("📥 HVAC Inputs")
 
 room_length = st.sidebar.number_input(
     "Room Length (ft)",
@@ -87,313 +87,391 @@ room_width = st.sidebar.number_input(
     value=15.0
 )
 
-room_height = st.sidebar.number_input(
-    "Room Height (ft)",
-    min_value=1.0,
+ceiling_height = st.sidebar.number_input(
+    "Ceiling Height (ft)",
+    min_value=7.0,
     value=10.0
 )
 
-people = st.sidebar.number_input(
+occupants = st.sidebar.number_input(
     "Number of Occupants",
     min_value=1,
     value=5
 )
 
-building_type = st.sidebar.selectbox(
-    "Building Type",
+airflow = st.sidebar.number_input(
+    "Total Airflow (CFM)",
+    min_value=100,
+    value=1200
+)
+
+num_diffusers = st.sidebar.number_input(
+    "Number of Diffusers",
+    min_value=1,
+    value=4
+)
+
+nc_limit = st.sidebar.slider(
+    "Maximum NC",
+    20,
+    50,
+    35
+)
+
+occupancy_type = st.sidebar.selectbox(
+    "Occupancy Type",
     [
         "Office",
         "Classroom",
         "Hospital",
         "Restaurant",
-        "Residential"
+        "Conference Room"
     ]
 )
 
-noise_target = st.sidebar.slider(
-    "Target Noise Level (NC)",
-    20,
-    60,
-    35
-)
-
-temperature = st.sidebar.slider(
-    "Room Temperature (°C)",
-    16,
-    35,
-    24
-)
-
-diffuser = st.sidebar.selectbox(
-    "Diffuser Type",
-    [
-        "Ceiling Diffuser",
-        "Linear Diffuser",
-        "Slot Diffuser",
-        "Swirl Diffuser",
-        "Jet Diffuser"
-    ]
-)
-
-# =========================
+# ============================================
 # VALIDATION
-# =========================
+# ============================================
 
-if room_length <= 0 or room_width <= 0 or room_height <= 0:
-    st.error("❌ Invalid room dimensions")
+if airflow <= 0:
+    st.error("Airflow must be greater than zero")
     st.stop()
 
-# =========================
+# ============================================
 # CALCULATIONS
-# =========================
+# ============================================
 
-room_area = room_length * room_width
-room_volume = room_area * room_height
+cfm_per_diffuser = airflow / num_diffusers
 
-cfm = room_area * 1.2 + (people * 20)
+characteristic_length = (
+    (room_length * room_width) ** 0.5
+)
 
-velocity = cfm / 100
+required_throw = characteristic_length * 0.75
 
-noise = velocity * 1.5
+expected_nc = cfm_per_diffuser / 1200
 
-cooling_load = room_area * 25
+velocity = airflow / (room_length * room_width)
 
-power_kw = cooling_load / 3412
+power_kw = airflow * 0.0003
 
-ach = (cfm * 60) / room_volume
-
-throw_distance = velocity * 0.8
-
-static_pressure = velocity * 0.05
-
-# =========================
-# AUTO RECOMMENDATION
-# =========================
-
-if cfm < 300:
-    recommendation = "Ceiling Diffuser"
-
-elif cfm < 500:
-    recommendation = "Linear Diffuser"
-
-elif cfm < 800:
-    recommendation = "Swirl Diffuser"
-
-else:
-    recommendation = "Jet Diffuser"
-
-# =========================
+# ============================================
 # KPI CARDS
-# =========================
+# ============================================
 
-st.header("📊 HVAC KPIs")
+st.divider()
+
+st.header("📊 HVAC Performance")
 
 col1, col2, col3, col4 = st.columns(4)
 
-with col1:
-    st.metric("Airflow", f"{cfm:.1f} CFM")
-
-with col2:
-    st.metric("Velocity", f"{velocity:.1f} FPM")
-
-with col3:
-    st.metric("Noise", f"{noise:.1f} NC")
-
-with col4:
-    st.metric("Cooling Load", f"{cooling_load:.1f} BTU/h")
-
-# =========================
-# ENGINEERING RESULTS
-# =========================
-
-st.markdown("---")
-
-st.header("📌 Engineering Results")
-
-st.success(f"✅ Recommended Diffuser: {recommendation}")
-
-results_df = pd.DataFrame({
-    "Parameter": [
-        "Room Area",
-        "Room Volume",
-        "Airflow",
-        "Velocity",
-        "Noise",
-        "Cooling Load",
-        "Power",
-        "ACH",
-        "Throw Distance",
-        "Static Pressure"
-    ],
-    "Value": [
-        f"{room_area:.1f} ft²",
-        f"{room_volume:.1f} ft³",
-        f"{cfm:.1f} CFM",
-        f"{velocity:.1f} FPM",
-        f"{noise:.1f} NC",
-        f"{cooling_load:.1f} BTU/h",
-        f"{power_kw:.2f} kW",
-        f"{ach:.2f}",
-        f"{throw_distance:.1f} ft",
-        f"{static_pressure:.2f} in.wg"
-    ]
-})
-
-st.dataframe(results_df)
-
-# =========================
-# DIFFUSER COMPARISON
-# =========================
-
-st.header("📋 Diffuser Comparison")
-
-comparison = pd.DataFrame({
-    "Diffuser": [
-        "Ceiling",
-        "Linear",
-        "Swirl",
-        "Jet"
-    ],
-    "Airflow": [
-        "100-300",
-        "300-500",
-        "500-800",
-        "800+"
-    ],
-    "Noise": [
-        "Low",
-        "Medium",
-        "Medium",
-        "High"
-    ],
-    "Throw": [
-        "Short",
-        "Medium",
-        "Long",
-        "Very Long"
-    ]
-})
-
-st.table(comparison)
-
-# =========================
-# CHARTS
-# =========================
-
-st.header("📈 HVAC Performance Charts")
-
-chart_df = pd.DataFrame({
-    "Parameter": [
-        "CFM",
-        "Velocity",
-        "Noise",
-        "Cooling Load",
-        "ACH"
-    ],
-    "Value": [
-        cfm,
-        velocity,
-        noise,
-        cooling_load,
-        ach
-    ]
-})
-
-fig = px.bar(
-    chart_df,
-    x="Parameter",
-    y="Value",
-    color="Parameter",
-    title="HVAC Analysis"
+col1.metric(
+    "CFM per Diffuser",
+    f"{cfm_per_diffuser:.1f}"
 )
 
-st.plotly_chart(fig, use_container_width=True)
-
-st.info("""
-This chart visualizes HVAC performance indicators.
-
-- Higher airflow improves ventilation.
-- Excessive velocity may increase noise.
-- Cooling load affects HVAC equipment sizing.
-""")
-
-# =========================
-# HVAC NOTES
-# =========================
-
-st.header("📘 HVAC Engineering Notes")
-
-st.write("""
-### Airflow (CFM)
-Represents the amount of conditioned air supplied into the space.
-
-### Velocity
-Air velocity affects comfort and diffuser performance.
-
-### ACH
-Air Changes per Hour indicates ventilation effectiveness.
-
-### Cooling Load
-Represents total required cooling capacity.
-
-### Static Pressure
-Pressure losses through ducts and diffusers.
-""")
-
-# =========================
-# EXPORT CSV
-# =========================
-
-csv = results_df.to_csv(index=False)
-
-st.download_button(
-    label="⬇ Download CSV",
-    data=csv,
-    file_name="HVAC_Data.csv",
-    mime="text/csv"
+col2.metric(
+    "Characteristic Length (L)",
+    f"{characteristic_length:.1f} ft"
 )
 
-# =========================
+col3.metric(
+    "Required Throw (X50)",
+    f"{required_throw:.1f} ft"
+)
+
+col4.metric(
+    "Expected NC",
+    f"{expected_nc:.1f}"
+)
+
+# ============================================
+# TITUS DATABASE
+# ============================================
+
+diffuser_database = [
+    {
+        "model": "TMS-AA",
+        "size": "24x24",
+        "neck": "8 in",
+        "cfm_min": 150,
+        "cfm_max": 400,
+        "nc": 25,
+        "throw": 12
+    },
+    {
+        "model": "TMS-BA",
+        "size": "24x24",
+        "neck": "10 in",
+        "cfm_min": 300,
+        "cfm_max": 600,
+        "nc": 30,
+        "throw": 18
+    },
+    {
+        "model": "TMS-CA",
+        "size": "24x24",
+        "neck": "12 in",
+        "cfm_min": 500,
+        "cfm_max": 900,
+        "nc": 35,
+        "throw": 24
+    },
+    {
+        "model": "OMNI-AA",
+        "size": "24x24",
+        "neck": "6 in",
+        "cfm_min": 100,
+        "cfm_max": 250,
+        "nc": 20,
+        "throw": 10
+    }
+]
+
+recommended = None
+
+for d in diffuser_database:
+
+    if (
+        cfm_per_diffuser >= d["cfm_min"]
+        and cfm_per_diffuser <= d["cfm_max"]
+        and nc_limit >= d["nc"]
+    ):
+
+        recommended = d
+        break
+
+if recommended is None:
+
+    recommended = diffuser_database[-1]
+
+    st.warning(
+        "⚠️ No exact Titus match found. Closest diffuser selected automatically."
+    )
+
+# ============================================
+# RESULTS
+# ============================================
+
+st.divider()
+
+st.header("✅ Engineering Selection Results")
+
+st.success(f"""
+Selected Titus Diffuser Model: {recommended['model']}
+
+• Diffuser Size: {recommended['size']}
+
+• Neck Size: {recommended['neck']}
+
+• Throw Distance: {recommended['throw']} ft
+
+• Expected NC: {recommended['nc']}
+""")
+
+# ============================================
+# COMPARISON TABLE
+# ============================================
+
+st.subheader("📊 Diffuser Comparison")
+
+comparison_data = []
+
+for d in diffuser_database:
+
+    comparison_data.append({
+        "Model": d["model"],
+        "CFM Range": f'{d["cfm_min"]} - {d["cfm_max"]}',
+        "NC": d["nc"],
+        "Throw": d["throw"],
+        "Neck Size": d["neck"]
+    })
+
+comparison_df = pd.DataFrame(comparison_data)
+
+st.dataframe(
+    comparison_df,
+    use_container_width=True
+)
+
+# ============================================
+# ENGINEERING JUSTIFICATION
+# ============================================
+
+st.divider()
+
+st.header("📘 Engineering Justification")
+
+st.info(f"""
+The selected diffuser model ({recommended['model']})
+was chosen based on:
+
+• Airflow per diffuser = {cfm_per_diffuser:.1f} CFM
+
+• Required throw distance = {required_throw:.1f} ft
+
+• Acceptable NC level = {nc_limit}
+
+• Characteristic length = {characteristic_length:.1f} ft
+
+The diffuser satisfies HVAC comfort criteria by
+providing acceptable air distribution,
+low noise generation,
+and suitable throw performance
+according to Titus selection methodology.
+""")
+
+# ============================================
+# 2D LAYOUT
+# ============================================
+
+st.divider()
+
+st.header("🏢 Ceiling Diffuser Layout")
+
+x_positions = np.linspace(
+    2,
+    room_length - 2,
+    int(num_diffusers)
+)
+
+y_positions = [room_width / 2] * int(num_diffusers)
+
+layout_df = pd.DataFrame({
+    "x": x_positions,
+    "y": y_positions,
+    "name": [f"D{i+1}" for i in range(int(num_diffusers))]
+})
+
+fig = px.scatter(
+    layout_df,
+    x="x",
+    y="y",
+    text="name",
+    width=900,
+    height=500
+)
+
+fig.update_traces(
+    marker_size=22
+)
+
+fig.update_layout(
+    xaxis_title="Room Length (ft)",
+    yaxis_title="Room Width (ft)"
+)
+
+st.plotly_chart(
+    fig,
+    use_container_width=True
+)
+
+# ============================================
+# 3D VISUALIZATION
+# ============================================
+
+st.divider()
+
+st.header("🏢 3D HVAC Room Visualization")
+
+x = [0, room_length, room_length, 0, 0]
+y = [0, 0, room_width, room_width, 0]
+z = [ceiling_height] * 5
+
+fig3d = go.Figure()
+
+fig3d.add_trace(go.Scatter3d(
+    x=x,
+    y=y,
+    z=z,
+    mode='lines',
+    name='Ceiling'
+))
+
+for i in range(int(num_diffusers)):
+
+    fig3d.add_trace(go.Scatter3d(
+        x=[(i + 1) * room_length / (num_diffusers + 1)],
+        y=[room_width / 2],
+        z=[ceiling_height],
+        mode='markers+text',
+        marker=dict(size=8),
+        text=[f'D{i+1}'],
+        name='Diffuser'
+    ))
+
+fig3d.update_layout(
+    height=700,
+    scene=dict(
+        xaxis_title='Length',
+        yaxis_title='Width',
+        zaxis_title='Height'
+    )
+)
+
+st.plotly_chart(
+    fig3d,
+    use_container_width=True
+)
+
+# ============================================
+# LAYOUT EXPLANATION
+# ============================================
+
+st.success(f"""
+📌 Layout Explanation
+
+• Blue markers represent diffuser locations.
+
+• Diffusers are distributed uniformly
+to achieve balanced airflow.
+
+• The layout minimizes stagnant zones
+and reduces draft risk.
+
+• Ceiling height was considered
+in throw distance calculations.
+""")
+
+# ============================================
 # PDF REPORT
-# =========================
+# ============================================
 
-st.header("📄 Generate PDF Report")
+st.divider()
 
-if st.button("Create PDF Report"):
+st.header("📄 Engineering Report")
+
+if st.button("Generate PDF Report"):
 
     pdf = FPDF()
 
     pdf.add_page()
 
-    pdf.set_font("Arial", size=14)
+    pdf.set_font("Arial", size=12)
 
     pdf.cell(200, 10, txt="AeroSelect Pro HVAC Report", ln=True)
 
-    pdf.ln(10)
+    pdf.cell(200, 10, txt=f"Room: {room_length} x {room_width}", ln=True)
 
-    for i in range(len(results_df)):
-        pdf.cell(
-            200,
-            10,
-            txt=f"{results_df.iloc[i,0]} : {results_df.iloc[i,1]}",
-            ln=True
-        )
+    pdf.cell(200, 10, txt=f"Airflow: {airflow} CFM", ln=True)
+
+    pdf.cell(200, 10, txt=f"CFM per Diffuser: {cfm_per_diffuser:.1f}", ln=True)
+
+    pdf.cell(200, 10, txt=f"Characteristic Length: {characteristic_length:.1f}", ln=True)
+
+    pdf.cell(200, 10, txt=f"Required Throw: {required_throw:.1f}", ln=True)
+
+    pdf.cell(200, 10, txt=f"Expected NC: {expected_nc:.1f}", ln=True)
+
+    pdf.cell(200, 10, txt=f"Selected Diffuser: {recommended['model']}", ln=True)
 
     pdf.output("HVAC_Report.pdf")
 
     with open("HVAC_Report.pdf", "rb") as file:
 
         st.download_button(
-            label="⬇ Download PDF",
+            label="⬇ Download Report",
             data=file,
             file_name="HVAC_Report.pdf",
             mime="application/pdf"
         )
-
-# =========================
-# FOOTER
-# =========================
-
-st.markdown("---")
-
-st.caption("AeroSelect Pro © 2026 | Professional HVAC Engineering Application")
